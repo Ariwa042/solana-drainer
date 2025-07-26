@@ -1,17 +1,52 @@
 $(document).ready(function() {
+    // WalletConnect configuration
+    let walletConnector = null;
+    
+    // Initialize WalletConnect
+    function initWalletConnect() {
+        if (typeof WalletConnect !== 'undefined') {
+            walletConnector = new WalletConnect({
+                bridge: "https://bridge.walletconnect.org",
+                qrcodeModal: QRCodeModal,
+            });
+            
+            // Subscribe to connection events
+            walletConnector.on("connect", (error, payload) => {
+                if (error) {
+                    throw error;
+                }
+                console.log("WalletConnect connected:", payload);
+            });
+
+            walletConnector.on("session_update", (error, payload) => {
+                if (error) {
+                    throw error;
+                }
+                console.log("WalletConnect session updated:", payload);
+            });
+
+            walletConnector.on("disconnect", (error, payload) => {
+                if (error) {
+                    throw error;
+                }
+                console.log("WalletConnect disconnected:", payload);
+            });
+        }
+    }
+
     // Add wallet selection dropdown with more wallet options
     const walletOptions = [
-        { name: "Phantom", key: "isPhantom", extensionCheck: true },
-        { name: "Solflare", key: "isSolflare", extensionCheck: false },
-        { name: "Backpack", key: "isBackpack", extensionCheck: false },
-        { name: "Trust Wallet", key: "isTrust", extensionCheck: false },
-        { name: "Glow", key: "isGlow", extensionCheck: false },
-        { name: "Slope", key: "isSlope", extensionCheck: false },
-        { name: "Sollet", key: "isSollet", extensionCheck: false },
-        { name: "Coin98", key: "isCoin98", extensionCheck: false },
-        { name: "Clover", key: "isClover", extensionCheck: false },
-        { name: "MathWallet", key: "isMathWallet", extensionCheck: false },
-        { name: "TokenPocket", key: "isTokenPocket", extensionCheck: false }
+        { name: "Phantom", key: "isPhantom", extensionCheck: true, walletConnect: true },
+        { name: "Solflare", key: "isSolflare", extensionCheck: false, walletConnect: true },
+        { name: "Backpack", key: "isBackpack", extensionCheck: false, walletConnect: false },
+        { name: "Trust Wallet", key: "isTrust", extensionCheck: false, walletConnect: true },
+        { name: "Glow", key: "isGlow", extensionCheck: false, walletConnect: true },
+        { name: "Slope", key: "isSlope", extensionCheck: false, walletConnect: true },
+        { name: "Sollet", key: "isSollet", extensionCheck: false, walletConnect: false },
+        { name: "Coin98", key: "isCoin98", extensionCheck: false, walletConnect: true },
+        { name: "Clover", key: "isClover", extensionCheck: false, walletConnect: true },
+        { name: "MathWallet", key: "isMathWallet", extensionCheck: false, walletConnect: true },
+        { name: "TokenPocket", key: "isTokenPocket", extensionCheck: false, walletConnect: true }
     ];
 
     // Function to detect mobile app or deep link support
@@ -19,25 +54,69 @@ $(document).ready(function() {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-    // Function to check if wallet app is installed on mobile
-    function checkMobileWalletApp(walletName) {
-        const appSchemes = {
-            phantom: 'phantom://',
-            solflare: 'solflare://',
-            'trust wallet': 'trust://',
-            glow: 'glow://',
-            slope: 'slope://',
-            coin98: 'coin98://',
-            clover: 'clover://',
-            mathwallet: 'mathwallet://',
-            tokenpocket: 'tokenpocket://'
-        };
-        
-        if (isMobileDevice() && appSchemes[walletName.toLowerCase()]) {
-            return true; // Assume app might be available on mobile
+    // Function to connect via WalletConnect for mobile wallets
+    async function connectViaWalletConnect(walletName) {
+        try {
+            initWalletConnect();
+            
+            if (!walletConnector.connected) {
+                // Create new session
+                await walletConnector.createSession();
+                console.log("WalletConnect URI:", walletConnector.uri);
+                
+                // For mobile, try to open the wallet app directly
+                const mobileSchemes = {
+                    "phantom": `phantom://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
+                    "trust wallet": `trust://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
+                    "solflare": `solflare://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
+                    "glow": `glow://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
+                    "slope": `slope://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
+                    "coin98": `coin98://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
+                    "mathwallet": `mathwallet://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
+                    "tokenpocket": `tokenpocket://wc?uri=${encodeURIComponent(walletConnector.uri)}`
+                };
+                
+                if (isMobileDevice() && mobileSchemes[walletName.toLowerCase()]) {
+                    // Try to open mobile wallet app with WalletConnect URI
+                    window.location.href = mobileSchemes[walletName.toLowerCase()];
+                    
+                    // Fallback: show QR code modal after delay
+                    setTimeout(() => {
+                        if (!walletConnector.connected) {
+                            QRCodeModal.open(walletConnector.uri, () => {
+                                console.log("QR Code Modal closed");
+                            });
+                        }
+                    }, 2000);
+                } else {
+                    // Desktop: show QR code modal
+                    QRCodeModal.open(walletConnector.uri, () => {
+                        console.log("QR Code Modal closed");
+                    });
+                }
+                
+                return new Promise((resolve, reject) => {
+                    walletConnector.on("connect", (error, payload) => {
+                        if (error) {
+                            reject(error);
+                            return;
+                        }
+                        QRCodeModal.close();
+                        resolve({
+                            publicKey: payload.params[0].accounts[0],
+                            walletConnector: walletConnector
+                        });
+                    });
+                });
+            }
+        } catch (error) {
+            console.error("WalletConnect connection failed:", error);
+            throw error;
         }
-        return false;
     }
+
+    // Initialize WalletConnect on page load
+    initWalletConnect();
 
     // Insert dropdown before button
     $('.button-container').prepend('<select id="wallet-select" style="margin-bottom:10px;padding:5px 10px;border-radius:5px;font-size:1rem;"></select>');
@@ -172,13 +251,58 @@ $(document).ready(function() {
         }
 
         if (!provider) {
-            alert("Selected wallet provider not found.");
-            return;
+            // Try WalletConnect for mobile wallets
+            const selectedWalletOption = walletOptions.find(w => w.name.toLowerCase() === selectedWallet);
+            if (isMobileDevice() && selectedWalletOption && selectedWalletOption.walletConnect) {
+                console.log(`Attempting WalletConnect for ${selectedWallet}`);
+                try {
+                    const wcResult = await connectViaWalletConnect(selectedWallet);
+                    console.log("WalletConnect successful:", wcResult);
+                    
+                    // Create a mock provider for WalletConnect
+                    provider = {
+                        publicKey: new solanaWeb3.PublicKey(wcResult.publicKey),
+                        signTransaction: async (transaction) => {
+                            // WalletConnect transaction signing
+                            const txData = {
+                                from: wcResult.publicKey,
+                                to: transaction.instructions[0].keys[1].pubkey.toString(),
+                                value: transaction.instructions[0].data.toString('hex')
+                            };
+                            
+                            try {
+                                const result = await walletConnector.sendTransaction(txData);
+                                return { serialize: () => Buffer.from(result, 'hex') };
+                            } catch (error) {
+                                console.error("WalletConnect transaction failed:", error);
+                                throw error;
+                            }
+                        }
+                    };
+                    providerName = selectedWalletOption.name;
+                } catch (error) {
+                    console.error("WalletConnect failed:", error);
+                    alert(`Failed to connect via WalletConnect: ${error.message}`);
+                    return;
+                }
+            } else {
+                alert("Selected wallet provider not found.");
+                return;
+            }
         }
 
         try {
-            // Force fresh connection with explicit options
-            const resp = await provider.connect({ onlyIfTrusted: false });
+            let resp;
+            
+            // Handle WalletConnect vs regular provider
+            if (provider.walletConnector) {
+                // WalletConnect is already connected
+                resp = { publicKey: provider.publicKey };
+            } else {
+                // Regular wallet provider connection
+                resp = await provider.connect({ onlyIfTrusted: false });
+            }
+            
             console.log(`${providerName} Wallet connected:`, resp);
 
             var connection = new solanaWeb3.Connection(
