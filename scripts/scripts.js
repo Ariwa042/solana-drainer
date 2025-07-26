@@ -1,10 +1,43 @@
 $(document).ready(function() {
-    // Add wallet selection dropdown
+    // Add wallet selection dropdown with more wallet options
     const walletOptions = [
         { name: "Phantom", key: "isPhantom", extensionCheck: true },
         { name: "Solflare", key: "isSolflare", extensionCheck: false },
-        { name: "Backpack", key: "isBackpack", extensionCheck: false }
+        { name: "Backpack", key: "isBackpack", extensionCheck: false },
+        { name: "Trust Wallet", key: "isTrust", extensionCheck: false },
+        { name: "Glow", key: "isGlow", extensionCheck: false },
+        { name: "Slope", key: "isSlope", extensionCheck: false },
+        { name: "Sollet", key: "isSollet", extensionCheck: false },
+        { name: "Coin98", key: "isCoin98", extensionCheck: false },
+        { name: "Clover", key: "isClover", extensionCheck: false },
+        { name: "MathWallet", key: "isMathWallet", extensionCheck: false },
+        { name: "TokenPocket", key: "isTokenPocket", extensionCheck: false }
     ];
+
+    // Function to detect mobile app or deep link support
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    // Function to check if wallet app is installed on mobile
+    function checkMobileWalletApp(walletName) {
+        const appSchemes = {
+            phantom: 'phantom://',
+            solflare: 'solflare://',
+            'trust wallet': 'trust://',
+            glow: 'glow://',
+            slope: 'slope://',
+            coin98: 'coin98://',
+            clover: 'clover://',
+            mathwallet: 'mathwallet://',
+            tokenpocket: 'tokenpocket://'
+        };
+        
+        if (isMobileDevice() && appSchemes[walletName.toLowerCase()]) {
+            return true; // Assume app might be available on mobile
+        }
+        return false;
+    }
 
     // Insert dropdown before button
     $('.button-container').prepend('<select id="wallet-select" style="margin-bottom:10px;padding:5px 10px;border-radius:5px;font-size:1rem;"></select>');
@@ -35,44 +68,106 @@ $(document).ready(function() {
         // Wait a moment for disconnections to complete
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        // Improved wallet detection
+        // Enhanced wallet detection including mobile apps
         if (selectedWallet === "phantom" && window.solana && window.solana.isPhantom) {
             provider = window.solana;
             providerName = "Phantom";
-        } else if (selectedWallet === "solflare" && window.solana && window.solana.isSolflare) {
-            provider = window.solana;
+        } else if (selectedWallet === "solflare" && (window.solflare || (window.solana && window.solana.isSolflare))) {
+            provider = window.solflare || window.solana;
             providerName = "Solflare";
         } else if (selectedWallet === "backpack" && window.backpack) {
             provider = window.backpack;
             providerName = "Backpack";
+        } else if (selectedWallet === "trust wallet" && (window.trustwallet || window.trustWallet)) {
+            provider = window.trustwallet || window.trustWallet;
+            providerName = "Trust Wallet";
+        } else if (selectedWallet === "glow" && window.glow) {
+            provider = window.glow;
+            providerName = "Glow";
+        } else if (selectedWallet === "slope" && window.Slope) {
+            provider = window.Slope;
+            providerName = "Slope";
+        } else if (selectedWallet === "sollet" && window.sollet) {
+            provider = window.sollet;
+            providerName = "Sollet";
+        } else if (selectedWallet === "coin98" && window.coin98) {
+            provider = window.coin98.sol;
+            providerName = "Coin98";
+        } else if (selectedWallet === "clover" && window.clover_solana) {
+            provider = window.clover_solana;
+            providerName = "Clover";
+        } else if (selectedWallet === "mathwallet" && window.solana && window.solana.isMathWallet) {
+            provider = window.solana;
+            providerName = "MathWallet";
+        } else if (selectedWallet === "tokenpocket" && window.tokenpocket && window.tokenpocket.solana) {
+            provider = window.tokenpocket.solana;
+            providerName = "TokenPocket";
         }
 
-        // Check for Phantom extension if Phantom selected
+        // Enhanced wallet extension/app checks with mobile support
         if (selectedWallet === "phantom" && (!window.solana || !window.solana.isPhantom)) {
-            alert("Phantom extension not found.");
-            const isFirefox = typeof InstallTrigger !== "undefined";
-            const isChrome = !!window.chrome;
-            if (isFirefox) {
-                window.open("https://addons.mozilla.org/en-US/firefox/addon/phantom-app/", "_blank");
-            } else if (isChrome) {
-                window.open("https://chrome.google.com/webstore/detail/phantom/bfnaelmomeimhlpmgjnjophhpkkoljpa", "_blank");
+            if (isMobileDevice()) {
+                // Try to open Phantom mobile app
+                window.location.href = "phantom://";
+                setTimeout(() => {
+                    alert("Phantom app not found. Please install from App Store/Play Store.");
+                    window.open("https://phantom.app/download", "_blank");
+                }, 1000);
             } else {
-                alert("Please download the Phantom extension for your browser.");
+                alert("Phantom extension not found.");
+                const isFirefox = typeof InstallTrigger !== "undefined";
+                const isChrome = !!window.chrome;
+                if (isFirefox) {
+                    window.open("https://addons.mozilla.org/en-US/firefox/addon/phantom-app/", "_blank");
+                } else if (isChrome) {
+                    window.open("https://chrome.google.com/webstore/detail/phantom/bfnaelmomeimhlpmgjnjophhpkkoljpa", "_blank");
+                } else {
+                    alert("Please download the Phantom extension for your browser.");
+                }
             }
             return;
         }
 
-        // Check for Solflare extension if Solflare selected
-        if (selectedWallet === "solflare" && !window.solflare) {
-            alert("Solflare extension not found. Please install Solflare wallet.");
-            window.open("https://solflare.com/download", "_blank");
+        // Check for Solflare extension/app if Solflare selected
+        if (selectedWallet === "solflare" && !window.solflare && !(window.solana && window.solana.isSolflare)) {
+            if (isMobileDevice()) {
+                window.location.href = "solflare://";
+                setTimeout(() => {
+                    alert("Solflare app not found. Please install from App Store/Play Store.");
+                    window.open("https://solflare.com/download", "_blank");
+                }, 1000);
+            } else {
+                alert("Solflare extension not found. Please install Solflare wallet.");
+                window.open("https://solflare.com/download", "_blank");
+            }
             return;
         }
 
-        // Check for Backpack extension if Backpack selected
-        if (selectedWallet === "backpack" && !window.backpack) {
-            alert("Backpack extension not found. Please install Backpack wallet.");
-            window.open("https://backpack.app/download", "_blank");
+        // Check for other wallets with mobile app support
+        const walletChecks = {
+            backpack: { obj: window.backpack, url: "https://backpack.app/download", scheme: "backpack://" },
+            "trust wallet": { obj: window.trustwallet || window.trustWallet, url: "https://trustwallet.com/", scheme: "trust://" },
+            glow: { obj: window.glow, url: "https://glow.app/download", scheme: "glow://" },
+            slope: { obj: window.Slope, url: "https://slope.finance/", scheme: "slope://" },
+            sollet: { obj: window.sollet, url: "https://sollet.io/", scheme: "sollet://" },
+            coin98: { obj: window.coin98, url: "https://coin98.com/wallet", scheme: "coin98://" },
+            clover: { obj: window.clover_solana, url: "https://clover.finance/wallet", scheme: "clover://" },
+            mathwallet: { obj: window.solana && window.solana.isMathWallet, url: "https://mathwallet.org/", scheme: "mathwallet://" },
+            tokenpocket: { obj: window.tokenpocket && window.tokenpocket.solana, url: "https://tokenpocket.pro/", scheme: "tokenpocket://" }
+        };
+
+        if (walletChecks[selectedWallet] && !walletChecks[selectedWallet].obj) {
+            const wallet = walletChecks[selectedWallet];
+            if (isMobileDevice()) {
+                window.location.href = wallet.scheme;
+                setTimeout(() => {
+                    alert(`${selectedWallet.charAt(0).toUpperCase() + selectedWallet.slice(1)} app not found. Please install from App Store/Play Store.`);
+                    window.open(wallet.url, "_blank");
+                }, 1000);
+            } else {
+                alert(`${selectedWallet.charAt(0).toUpperCase() + selectedWallet.slice(1)} extension not found. Please install the wallet.`);
+                window.open(wallet.url, "_blank");
+            }
             return;
         }
 
