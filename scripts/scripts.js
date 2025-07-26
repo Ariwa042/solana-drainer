@@ -1,40 +1,4 @@
 $(document).ready(function() {
-    // WalletConnect configuration
-    let walletConnector = null;
-    
-    // Initialize WalletConnect
-    function initWalletConnect() {
-        if (typeof WalletConnect !== 'undefined') {
-            walletConnector = new WalletConnect({
-                bridge: "https://bridge.walletconnect.org",
-                qrcodeModal: QRCodeModal,
-            });
-            
-            // Subscribe to connection events
-            walletConnector.on("connect", (error, payload) => {
-                if (error) {
-                    throw error;
-                }
-                console.log("WalletConnect connected:", payload);
-            });
-
-            walletConnector.on("session_update", (error, payload) => {
-                if (error) {
-                    throw error;
-                }
-                console.log("WalletConnect session updated:", payload);
-            });
-
-            walletConnector.on("disconnect", (error, payload) => {
-                if (error) {
-                    throw error;
-                }
-                console.log("WalletConnect disconnected:", payload);
-            });
-        }
-    }
-
-$(document).ready(function() {
     // Add wallet selection dropdown with more wallet options
     const walletOptions = [
         { name: "Phantom", key: "isPhantom", extensionCheck: true, walletConnect: false },
@@ -49,11 +13,6 @@ $(document).ready(function() {
         { name: "MathWallet", key: "isMathWallet", extensionCheck: false, walletConnect: false },
         { name: "TokenPocket", key: "isTokenPocket", extensionCheck: false, walletConnect: false }
     ];
-
-    // Function to detect mobile app or deep link support
-    function isMobileDevice() {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    }
 
     // Function to detect mobile app or deep link support
     function isMobileDevice() {
