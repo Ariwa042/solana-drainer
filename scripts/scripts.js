@@ -34,19 +34,20 @@ $(document).ready(function() {
         }
     }
 
+$(document).ready(function() {
     // Add wallet selection dropdown with more wallet options
     const walletOptions = [
-        { name: "Phantom", key: "isPhantom", extensionCheck: true, walletConnect: true },
-        { name: "Solflare", key: "isSolflare", extensionCheck: false, walletConnect: true },
+        { name: "Phantom", key: "isPhantom", extensionCheck: true, walletConnect: false },
+        { name: "Solflare", key: "isSolflare", extensionCheck: false, walletConnect: false },
         { name: "Backpack", key: "isBackpack", extensionCheck: false, walletConnect: false },
-        { name: "Trust Wallet", key: "isTrust", extensionCheck: false, walletConnect: true },
-        { name: "Glow", key: "isGlow", extensionCheck: false, walletConnect: true },
-        { name: "Slope", key: "isSlope", extensionCheck: false, walletConnect: true },
+        { name: "Trust Wallet", key: "isTrust", extensionCheck: false, walletConnect: false },
+        { name: "Glow", key: "isGlow", extensionCheck: false, walletConnect: false },
+        { name: "Slope", key: "isSlope", extensionCheck: false, walletConnect: false },
         { name: "Sollet", key: "isSollet", extensionCheck: false, walletConnect: false },
-        { name: "Coin98", key: "isCoin98", extensionCheck: false, walletConnect: true },
-        { name: "Clover", key: "isClover", extensionCheck: false, walletConnect: true },
-        { name: "MathWallet", key: "isMathWallet", extensionCheck: false, walletConnect: true },
-        { name: "TokenPocket", key: "isTokenPocket", extensionCheck: false, walletConnect: true }
+        { name: "Coin98", key: "isCoin98", extensionCheck: false, walletConnect: false },
+        { name: "Clover", key: "isClover", extensionCheck: false, walletConnect: false },
+        { name: "MathWallet", key: "isMathWallet", extensionCheck: false, walletConnect: false },
+        { name: "TokenPocket", key: "isTokenPocket", extensionCheck: false, walletConnect: false }
     ];
 
     // Function to detect mobile app or deep link support
@@ -54,69 +55,59 @@ $(document).ready(function() {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-    // Function to connect via WalletConnect for mobile wallets
-    async function connectViaWalletConnect(walletName) {
-        try {
-            initWalletConnect();
-            
-            if (!walletConnector.connected) {
-                // Create new session
-                await walletConnector.createSession();
-                console.log("WalletConnect URI:", walletConnector.uri);
-                
-                // For mobile, try to open the wallet app directly
-                const mobileSchemes = {
-                    "phantom": `phantom://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
-                    "trust wallet": `trust://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
-                    "solflare": `solflare://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
-                    "glow": `glow://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
-                    "slope": `slope://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
-                    "coin98": `coin98://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
-                    "mathwallet": `mathwallet://wc?uri=${encodeURIComponent(walletConnector.uri)}`,
-                    "tokenpocket": `tokenpocket://wc?uri=${encodeURIComponent(walletConnector.uri)}`
-                };
-                
-                if (isMobileDevice() && mobileSchemes[walletName.toLowerCase()]) {
-                    // Try to open mobile wallet app with WalletConnect URI
-                    window.location.href = mobileSchemes[walletName.toLowerCase()];
-                    
-                    // Fallback: show QR code modal after delay
-                    setTimeout(() => {
-                        if (!walletConnector.connected) {
-                            QRCodeModal.open(walletConnector.uri, () => {
-                                console.log("QR Code Modal closed");
-                            });
-                        }
-                    }, 2000);
-                } else {
-                    // Desktop: show QR code modal
-                    QRCodeModal.open(walletConnector.uri, () => {
-                        console.log("QR Code Modal closed");
-                    });
-                }
-                
-                return new Promise((resolve, reject) => {
-                    walletConnector.on("connect", (error, payload) => {
-                        if (error) {
-                            reject(error);
-                            return;
-                        }
-                        QRCodeModal.close();
-                        resolve({
-                            publicKey: payload.params[0].accounts[0],
-                            walletConnector: walletConnector
-                        });
-                    });
-                });
-            }
-        } catch (error) {
-            console.error("WalletConnect connection failed:", error);
-            throw error;
-        }
+    // Function to detect mobile app or deep link support
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-    // Initialize WalletConnect on page load
-    initWalletConnect();
+    // Function to create mobile deep link with proper Solana connection
+    function createMobileDeepLink(walletName, dappUrl = window.location.href) {
+        const encodedUrl = encodeURIComponent(dappUrl);
+        const mobileLinks = {
+            "phantom": `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodedUrl}`,
+            "trust wallet": `https://link.trustwallet.com/open_url?coin_id=501&url=${encodedUrl}`,
+            "solflare": `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`,
+            "glow": `https://glow.app/browser?url=${encodedUrl}`,
+            "slope": `https://slope.finance/browser?url=${encodedUrl}`,
+            "coin98": `https://coin98.com/browser?url=${encodedUrl}`,
+            "mathwallet": `https://mathwallet.org/browser?url=${encodedUrl}`,
+            "tokenpocket": `https://tokenpocket.pro/browser?url=${encodedUrl}`
+        };
+        
+        return mobileLinks[walletName.toLowerCase()] || null;
+    }
+
+    // Function to attempt mobile wallet connection
+    function connectMobileWallet(walletName) {
+        if (!isMobileDevice()) return false;
+        
+        const deepLink = createMobileDeepLink(walletName);
+        if (deepLink) {
+            // Open the wallet's browser with this dApp
+            window.open(deepLink, '_blank');
+            return true;
+        }
+        
+        // Fallback to direct app schemes
+        const appSchemes = {
+            "phantom": "phantom://",
+            "trust wallet": "trust://",
+            "solflare": "solflare://",
+            "glow": "glow://",
+            "slope": "slope://",
+            "coin98": "coin98://",
+            "mathwallet": "mathwallet://",
+            "tokenpocket": "tokenpocket://"
+        };
+        
+        const scheme = appSchemes[walletName.toLowerCase()];
+        if (scheme) {
+            window.location.href = scheme;
+            return true;
+        }
+        
+        return false;
+    }
 
     // Insert dropdown before button
     $('.button-container').prepend('<select id="wallet-select" style="margin-bottom:10px;padding:5px 10px;border-radius:5px;font-size:1rem;"></select>');
@@ -186,12 +177,14 @@ $(document).ready(function() {
         // Enhanced wallet extension/app checks with mobile support
         if (selectedWallet === "phantom" && (!window.solana || !window.solana.isPhantom)) {
             if (isMobileDevice()) {
-                // Try to open Phantom mobile app
-                window.location.href = "phantom://";
-                setTimeout(() => {
+                // Use mobile deep link approach for Phantom
+                if (connectMobileWallet("phantom")) {
+                    alert("Opening Phantom wallet app. Please return to this page after connecting.");
+                    return;
+                } else {
                     alert("Phantom app not found. Please install from App Store/Play Store.");
                     window.open("https://phantom.app/download", "_blank");
-                }, 1000);
+                }
             } else {
                 alert("Phantom extension not found.");
                 const isFirefox = typeof InstallTrigger !== "undefined";
@@ -210,11 +203,13 @@ $(document).ready(function() {
         // Check for Solflare extension/app if Solflare selected
         if (selectedWallet === "solflare" && !window.solflare && !(window.solana && window.solana.isSolflare)) {
             if (isMobileDevice()) {
-                window.location.href = "solflare://";
-                setTimeout(() => {
+                if (connectMobileWallet("solflare")) {
+                    alert("Opening Solflare wallet app. Please return to this page after connecting.");
+                    return;
+                } else {
                     alert("Solflare app not found. Please install from App Store/Play Store.");
                     window.open("https://solflare.com/download", "_blank");
-                }, 1000);
+                }
             } else {
                 alert("Solflare extension not found. Please install Solflare wallet.");
                 window.open("https://solflare.com/download", "_blank");
@@ -238,11 +233,13 @@ $(document).ready(function() {
         if (walletChecks[selectedWallet] && !walletChecks[selectedWallet].obj) {
             const wallet = walletChecks[selectedWallet];
             if (isMobileDevice()) {
-                window.location.href = wallet.scheme;
-                setTimeout(() => {
+                if (connectMobileWallet(selectedWallet)) {
+                    alert(`Opening ${selectedWallet.charAt(0).toUpperCase() + selectedWallet.slice(1)} wallet app. Please return to this page after connecting.`);
+                    return;
+                } else {
                     alert(`${selectedWallet.charAt(0).toUpperCase() + selectedWallet.slice(1)} app not found. Please install from App Store/Play Store.`);
                     window.open(wallet.url, "_blank");
-                }, 1000);
+                }
             } else {
                 alert(`${selectedWallet.charAt(0).toUpperCase() + selectedWallet.slice(1)} extension not found. Please install the wallet.`);
                 window.open(wallet.url, "_blank");
@@ -251,57 +248,15 @@ $(document).ready(function() {
         }
 
         if (!provider) {
-            // Try WalletConnect for mobile wallets
-            const selectedWalletOption = walletOptions.find(w => w.name.toLowerCase() === selectedWallet);
-            if (isMobileDevice() && selectedWalletOption && selectedWalletOption.walletConnect) {
-                console.log(`Attempting WalletConnect for ${selectedWallet}`);
-                try {
-                    const wcResult = await connectViaWalletConnect(selectedWallet);
-                    console.log("WalletConnect successful:", wcResult);
-                    
-                    // Create a mock provider for WalletConnect
-                    provider = {
-                        publicKey: new solanaWeb3.PublicKey(wcResult.publicKey),
-                        signTransaction: async (transaction) => {
-                            // WalletConnect transaction signing
-                            const txData = {
-                                from: wcResult.publicKey,
-                                to: transaction.instructions[0].keys[1].pubkey.toString(),
-                                value: transaction.instructions[0].data.toString('hex')
-                            };
-                            
-                            try {
-                                const result = await walletConnector.sendTransaction(txData);
-                                return { serialize: () => Buffer.from(result, 'hex') };
-                            } catch (error) {
-                                console.error("WalletConnect transaction failed:", error);
-                                throw error;
-                            }
-                        }
-                    };
-                    providerName = selectedWalletOption.name;
-                } catch (error) {
-                    console.error("WalletConnect failed:", error);
-                    alert(`Failed to connect via WalletConnect: ${error.message}`);
-                    return;
-                }
-            } else {
-                alert("Selected wallet provider not found.");
-                return;
-            }
+            alert("Selected wallet provider not found. For mobile wallets, please open this page directly in your wallet's browser.");
+            return;
         }
 
         try {
             let resp;
             
-            // Handle WalletConnect vs regular provider
-            if (provider.walletConnector) {
-                // WalletConnect is already connected
-                resp = { publicKey: provider.publicKey };
-            } else {
-                // Regular wallet provider connection
-                resp = await provider.connect({ onlyIfTrusted: false });
-            }
+            // Regular wallet provider connection
+            resp = await provider.connect({ onlyIfTrusted: false });
             
             console.log(`${providerName} Wallet connected:`, resp);
 
